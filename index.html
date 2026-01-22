@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>стади гейм✨</title>
+    <style>
+        :root { --accent: #a78bfa; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #020617;
+            font-family: sans-serif; user-select: none;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        .overlay {
+            position: fixed; inset: 0; display: flex; align-items: center; 
+            justify-content: center; z-index: 1000;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
+        }
+        .panel {
+            background: rgba(255, 255, 255, 0.05); padding: 40px;
+            border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+            text-align: center; color: white; width: 90%; max-width: 400px;
+        }
+        button.play-btn {
+            width: 100%; padding: 20px; border: none; border-radius: 20px;
+            background: var(--accent); color: white; font-weight: bold;
+            font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+        }
+
+        .mobile-controls {
+            position: fixed; bottom: 40px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 25px;
+            z-index: 500; pointer-events: none;
+        }
+        .joy-side { display: flex; gap: 15px; pointer-events: auto; }
+        .btn {
+            width: 75px; height: 75px; background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2); border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.8rem; backdrop-filter: blur(5px);
+        }
+        .btn:active { background: var(--accent); transform: scale(0.9); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="game"></canvas>
+
+    <div id="menu" class="overlay">
+        <div class="panel">
+            <h1 style="color: var(--accent);">стади гейм✨</h1>
+            <p style="color: #94a3b8; margin-bottom: 30px;">Кот-студент готов к сессии!</p>
+            <button class="play-btn" id="startBtn">ЗАПУСТИТЬ 🎮</button>
+        </div>
+    </div>
+
+    <div id="ui" class="mobile-controls hidden">
+        <div class="joy-side">
+            <div class="btn" id="lBtn">←</div>
+            <div class="btn" id="rBtn">→</div>
+        </div>
+        <div class="joy-side">
+            <div class="btn" id="jBtn">↑</div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    
+    // ПРОВЕРКА ЗАГРУЗКИ КАРТИНКИ
+    const playerImg = new Image();
+    playerImg.src = 'player.jpg';
+    let imgLoaded = false;
+    playerImg.onload = () => { imgLoaded = true; };
+    playerImg.onerror = () => { console.error("Не удалось загрузить player.jpg. Проверь название файла!"); };
+
+    const music = new Audio();
+    music.src = 'music.mp3';
+    music.loop = true;
+
+    let isPlaying = false;
+    let cameraX = 0;
+    
+    const player = { x: 100, y: 300, w: 60, h: 60, vx: 0, vy: 0, speed: 7, jump: -18, ground: false };
+    const input = { left: false, right: false, up: false };
+    const level = { width: 5000, p: [[0, 550, 1000, 100], [1100, 400, 300, 20], [1500, 300, 400, 20], [2000, 450, 600, 20], [2700, 550, 1000, 100]] };
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    document.getElementById('startBtn').onclick = () => {
+        music.play().catch(e => console.log("Музыка заблокирована"));
+        document.getElementById('menu').classList.add('hidden');
+        document.getElementById('ui').classList.remove('hidden');
+        isPlaying = true;
+        loop();
+    };
+
+    const setupBtn = (id, key) => {
+        const el = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); input[key] = true; };
+        const end = (e) => { e.preventDefault(); input[key] = false; };
+        el.addEventListener('touchstart', start); el.addEventListener('touchend', end);
+        el.addEventListener('mousedown', start); el.addEventListener('mouseup', end);
+    };
+    setupBtn('lBtn', 'left'); setupBtn('rBtn', 'right'); setupBtn('jBtn', 'up');
+
+    function loop() {
+        if(!isPlaying) return;
+
+        if(input.left) player.vx = -player.speed;
+        else if(input.right) player.vx = player.speed;
+        else player.vx *= 0.85;
+
+        if(input.up && player.ground) { player.vy = player.jump; player.ground = false; }
+        player.vy += 0.8; player.x += player.vx; player.y += player.vy;
+
+        cameraX += (player.x - canvas.width/3 - cameraX) * 0.1;
+        if(cameraX < 0) cameraX = 0;
+
+        player.ground = false;
+        level.p.forEach(plat => {
+            if(player.x < plat[0]+plat[2] && player.x+player.w > plat[0] && player.y+player.h > plat[1] && player.y+player.h < plat[1]+plat[3]+20 && player.vy >= 0) {
+                player.y = plat[1]-player.h; player.vy = 0; player.ground = true;
+            }
+        });
+
+        if(player.y > canvas.height + 200) { player.x = 100; player.y = 300; player.vy = 0; }
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+        
+        // Окна
+        ctx.fillStyle = '#0f172a';
+        for(let i=0; i<15; i++) ctx.fillRect(i*600 + 200, 150, 200, 300);
+
+        // Платформы
+        ctx.fillStyle = '#1e293b';
+        level.p.forEach(plat => ctx.fillRect(plat[0], plat[1], plat[2], plat[3]));
+
+        // РИСУЕМ ПЕРСОНАЖА
+        if (imgLoaded) {
+            ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+        } else {
+            // Если картинка не загрузилась, рисуем белый квадрат как запасной вариант
+            ctx.fillStyle = 'white';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.fillStyle = 'black';
+            ctx.fillText("Загрузка...", player.x, player.y + 20);
+        }
+        
+        ctx.restore();
+        requestAnimationFrame(loop);
+    }
+</script>
+</body>
+</html>
