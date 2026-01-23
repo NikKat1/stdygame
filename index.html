@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STADY DASH 3D: MUTE MUSIC</title>
+    <title>STADY DASH 3D: GITHUB FIX</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
         #ui { position: fixed; top: 20px; left: 20px; color: #cba6f7; z-index: 10; pointer-events: none; }
         
-        /* Кнопка управления музыкой */
         #muteBtn { 
             position: fixed; top: 20px; right: 20px; z-index: 20;
             width: 50px; height: 50px; background: rgba(203, 166, 247, 0.3);
             border: 2px solid #cba6f7; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-size: 1.5rem; color: white;
-            transition: 0.3s;
         }
-        #muteBtn:active { transform: scale(0.9); }
 
         .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; z-index: 10; padding: 0 10px; box-sizing: border-box; }
-        .btn { width: 75px; height: 75px; background: rgba(203, 166, 247, 0.2); border: 2px solid #cba6f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; pointer-events: auto; cursor: pointer; }
+        .btn { width: 75px; height: 75px; background: rgba(203, 166, 247, 0.2); border: 2px solid #cba6f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; pointer-events: auto; cursor: pointer; user-select: none; }
         
         #bg-container { 
             position: fixed; inset: 0; z-index: -1; 
@@ -29,7 +26,7 @@
             transition: background-image 0.4s ease; 
         }
 
-        #start-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        #start-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 100; text-align: center; }
         .play-btn { background: #cba6f7; color: #111; border: none; padding: 20px 60px; font-size: 2rem; border-radius: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 0 20px #cba6f7; }
     </style>
 </head>
@@ -38,13 +35,14 @@
 <div id="start-overlay">
     <div>
         <h1 style="color:white; margin-bottom:10px;">STADY DASH 3D</h1>
+        <p style="color:#cba6f7; margin-bottom:30px;">Стрелки/WASD для ПК</p>
         <button class="play-btn" id="playBtn">ИГРАТЬ</button>
     </div>
 </div>
 
 <div id="muteBtn">🔊</div>
-
 <div id="bg-container"></div>
+
 <div id="ui">
     <b id="lvlTxt" style="font-size: 1.5rem;">ЭТАЖ: 1</b><br>
     <span id="attTxt" style="color:#f38ba8; font-weight:bold;">ПОПЫТКА: 1</span>
@@ -72,7 +70,7 @@
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
     const listener = new THREE.AudioListener();
@@ -82,9 +80,14 @@
     let isMuted = false;
     let currentMusic = null;
 
+    // Исправленная функция загрузки для GitHub
     function loadSnd(file, loop = false, vol = 0.4) {
         const s = new THREE.Audio(listener);
-        audioLoader.load(file, b => { s.setBuffer(b); s.setLoop(loop); s.setVolume(vol); });
+        audioLoader.load('./' + file, 
+            buffer => { s.setBuffer(buffer); s.setLoop(loop); s.setVolume(vol); console.log('Loaded:', file); },
+            undefined, 
+            err => console.warn('Sound error:', file)
+        );
         return s;
     }
 
@@ -95,8 +98,8 @@
     const m2 = loadSnd('music2.mp3', true, 0.3);
 
     const loader = new THREE.TextureLoader();
-    const texP = loader.load('player.jpg');
-    const texN = loader.load('npc.png');
+    const texP = loader.load('./player.jpg');
+    const texN = loader.load('./npc.png');
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.2));
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -113,7 +116,7 @@
     function createLevel() {
         [...platforms, ...obstacles, ...npcs].forEach(o => scene.remove(o.mesh || o));
         platforms = []; obstacles = []; npcs = [];
-        document.getElementById('bg-container').style.backgroundImage = `url('back (${Math.floor(Math.random()*32)+1}).jpg')`;
+        document.getElementById('bg-container').style.backgroundImage = `url('./back (${Math.floor(Math.random()*32)+1}).jpg')`;
         
         addPlatform(0, 0, 0, 6);
         let cx = 0, cy = 0;
@@ -129,7 +132,6 @@
         }
         addPlatform(cx + 6, cy, 0, 5, true);
         
-        // Логика переключения треков
         if (currentMusic) currentMusic.stop();
         currentMusic = (player.lvl % 2 === 0) ? m1 : m2;
         if (!isMuted && currentMusic.buffer) currentMusic.play();
@@ -148,52 +150,42 @@
     }
 
     function addObstacle(x, y, z) {
-        const mesh = new THREE.Mesh(
-            new THREE.ConeGeometry(0.4, 0.8, 4),
-            new THREE.MeshStandardMaterial({ color: 0xf38ba8 })
-        );
+        const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0xf38ba8 }));
         mesh.position.set(x, y, z);
         scene.add(mesh);
         obstacles.push(mesh);
     }
 
     function addNPC(x, y, z, parent) {
-        const mesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.9, 0.9),
-            new THREE.MeshStandardMaterial({ map: texN, transparent: true, side: THREE.DoubleSide })
-        );
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshStandardMaterial({ map: texN, transparent: true, side: THREE.DoubleSide }));
         mesh.rotation.y = Math.PI / 4;
         scene.add(mesh);
         npcs.push({ mesh, parent, relX: 0, dir: 1 });
     }
 
-    // Управление
+    // Клавиатура
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.left = true;
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.right = true;
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') input.up = true;
+        if (['ArrowLeft', 'a', 'A'].includes(e.key)) input.left = true;
+        if (['ArrowRight', 'd', 'D'].includes(e.key)) input.right = true;
+        if (['ArrowUp', 'w', 'W', ' '].includes(e.key)) input.up = true;
     });
     window.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.left = false;
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.right = false;
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') input.up = false;
+        if (['ArrowLeft', 'a', 'A'].includes(e.key)) input.left = false;
+        if (['ArrowRight', 'd', 'D'].includes(e.key)) input.right = false;
+        if (['ArrowUp', 'w', 'W', ' '].includes(e.key)) input.up = false;
     });
 
-    // Логика кнопки Mute
     document.getElementById('muteBtn').onclick = () => {
         isMuted = !isMuted;
         document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
-        if (currentMusic) {
-            if (isMuted) currentMusic.stop();
-            else currentMusic.play();
-        }
+        if (currentMusic) isMuted ? currentMusic.stop() : currentMusic.play();
     };
 
     function update() {
         player.vx = input.left ? -0.16 : (input.right ? 0.16 : player.vx * 0.85);
         if(input.up && player.ground) { 
             player.vy = 0.38; player.ground = false; 
-            if(sfxJump.buffer) sfxJump.play(); // Звуки работают всегда
+            if(sfxJump.buffer && !sfxJump.isPlaying) sfxJump.play();
         }
         
         player.vy -= 0.018;
@@ -201,7 +193,7 @@
         player.y += player.vy;
 
         if(player.y < -5 && !player.fallSnd) {
-            if(sfxFall.buffer) sfxFall.play();
+            if(sfxFall.buffer && !sfxFall.isPlaying) sfxFall.play();
             player.fallSnd = true;
         }
 
@@ -209,8 +201,7 @@
             if(p.moving) p.mesh.position.y = p.y + Math.sin(Date.now() * 0.003 + p.offset) * 1.5;
             let py = p.moving ? p.mesh.position.y : p.y;
             if(Math.abs(player.x - p.x) < p.size/2 + 0.4 && player.y - 0.5 < py + 0.3 && player.vy <= 0 && player.y > py) {
-                player.y = py + 0.8; player.vy = 0; player.ground = true;
-                player.fallSnd = false;
+                player.y = py + 0.8; player.vy = 0; player.ground = true; player.fallSnd = false;
                 if(p.finish) { player.lvl++; createLevel(); resetPlayer(); }
             }
         });
@@ -222,7 +213,6 @@
         });
 
         obstacles.forEach(s => { if(player.mesh.position.distanceTo(s.position) < 0.8) die(); });
-
         if(player.y < -12) die();
 
         player.mesh.position.set(player.x, player.y, player.z);
@@ -232,10 +222,8 @@
     }
 
     function die() { 
-        if(sfxLoose.buffer) sfxLoose.play();
-        player.att++; 
-        resetPlayer(); 
-        createLevel(); 
+        if(sfxLoose.buffer && !sfxLoose.isPlaying) sfxLoose.play();
+        player.att++; resetPlayer(); createLevel(); 
     }
 
     function resetPlayer() { 
@@ -246,7 +234,8 @@
 
     document.getElementById('playBtn').onclick = () => {
         document.getElementById('start-overlay').style.display = 'none';
-        THREE.AudioContext.getContext().resume();
+        const context = THREE.AudioContext.getContext();
+        if (context.state === 'suspended') context.resume();
         createLevel();
         animate();
     };
