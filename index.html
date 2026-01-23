@@ -2,289 +2,269 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>STADY DASH: FIX BLACK SCREEN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STADY DASH 3D: MUTE MUSIC</title>
     <style>
-        :root { --main: #cba6f7; --bg: #0b0b10; --danger: #f38ba8; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; user-select: none; touch-action: none; }
-        canvas { display: block; width: 100%; height: 100%; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        #ui { position: fixed; top: 20px; left: 20px; color: #cba6f7; z-index: 10; pointer-events: none; }
         
-        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-        .bar-container { width: 220px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 20px; }
-        #bar { width: 0%; height: 100%; background: var(--main); border-radius: 10px; transition: width 0.3s; }
+        /* Кнопка управления музыкой */
+        #muteBtn { 
+            position: fixed; top: 20px; right: 20px; z-index: 20;
+            width: 50px; height: 50px; background: rgba(203, 166, 247, 0.3);
+            border: 2px solid #cba6f7; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.5rem; color: white;
+            transition: 0.3s;
+        }
+        #muteBtn:active { transform: scale(0.9); }
 
-        .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1000; background: rgba(11, 11, 16, 0.9); backdrop-filter: blur(10px); }
-        .panel { background: #181825; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; }
-        .start-btn { background: var(--main); color: #11111b; border: none; padding: 18px 50px; font-size: 1.5rem; font-weight: 900; border-radius: 15px; cursor: pointer; }
+        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; z-index: 10; padding: 0 10px; box-sizing: border-box; }
+        .btn { width: 75px; height: 75px; background: rgba(203, 166, 247, 0.2); border: 2px solid #cba6f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; pointer-events: auto; cursor: pointer; }
         
-        .stats { position: fixed; top: 20px; left: 20px; z-index: 100; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 15px; border: 1px solid var(--main); pointer-events: none; }
-        .controls { position: fixed; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; z-index: 500; pointer-events: none; }
-        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid rgba(255,255,255,0.2); pointer-events: auto; }
-        .btn-jump { border-radius: 50%; border-color: var(--main); width: 95px; height: 95px; }
-        .hidden { display: none !important; }
+        #bg-container { 
+            position: fixed; inset: 0; z-index: -1; 
+            background-size: 100% 100%; background-repeat: no-repeat;
+            background-position: center; filter: brightness(0.5); 
+            transition: background-image 0.4s ease; 
+        }
+
+        #start-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        .play-btn { background: #cba6f7; color: #111; border: none; padding: 20px 60px; font-size: 2rem; border-radius: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 0 20px #cba6f7; }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div style="font-size: 1.5rem; color: var(--main); font-weight: bold;">STADY DASH</div>
-        <div class="bar-container"><div id="bar"></div></div>
+<div id="start-overlay">
+    <div>
+        <h1 style="color:white; margin-bottom:10px;">STADY DASH 3D</h1>
+        <button class="play-btn" id="playBtn">ИГРАТЬ</button>
     </div>
+</div>
 
-    <canvas id="game"></canvas>
+<div id="muteBtn">🔊</div>
 
-    <div id="menu" class="overlay hidden">
-        <div class="panel">
-            <h1 style="margin-bottom: 25px;">STADY DASH</h1>
-            <button class="start-btn" id="startBtn">ПОГНАЛИ!</button>
-        </div>
-    </div>
+<div id="bg-container"></div>
+<div id="ui">
+    <b id="lvlTxt" style="font-size: 1.5rem;">ЭТАЖ: 1</b><br>
+    <span id="attTxt" style="color:#f38ba8; font-weight:bold;">ПОПЫТКА: 1</span>
+</div>
 
-    <div class="stats">
-        <div id="lvlTxt">ЭТАЖ: 1/32</div>
-        <div id="attTxt" style="color: var(--danger); font-size: 0.8rem;">ПОПЫТКА: 1</div>
-    </div>
+<div class="controls">
+    <div id="lBtn" class="btn">←</div>
+    <div id="jBtn" class="btn" style="width:95px; height:95px;">↑</div>
+    <div id="rBtn" class="btn">→</div>
+</div>
 
-    <div class="controls">
-        <div style="display:flex; gap:15px;">
-            <div id="lBtn" class="btn">←</div>
-            <div id="rBtn" class="btn">→</div>
-        </div>
-        <div id="jBtn" class="btn btn-jump">↑</div>
-    </div>
+<script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
 
-<script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
+<script type="module">
+    import * as THREE from 'three';
+
+    const scene = new THREE.Scene();
+    const aspect = window.innerWidth / window.innerHeight;
+    const d = 8;
+    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+    camera.position.set(20, 15, 20);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+    const audioLoader = new THREE.AudioLoader();
     
-    const files = {
-        img: { p: 'player.jpg', n: 'npc.png' },
-        snd: { m1: 'music.mp3', m2: 'music2.mp3', j: 'jump.wav', l: 'loose.wav', f: 'fall.wav' }
-    };
+    let isMuted = false;
+    let currentMusic = null;
 
-    const loaded = { img: {}, snd: {} };
-    const bg = new Image();
-    let bgReady = false;
-    let total = Object.keys(files.img).length + Object.keys(files.snd).length;
-    let count = 0;
-
-    function init() {
-        for (let k in files.img) {
-            let i = new Image();
-            i.onload = i.onerror = () => done();
-            i.src = files.img[k];
-            loaded.img[k] = i;
-        }
-        for (let k in files.snd) {
-            let s = new Audio();
-            s.oncanplaythrough = () => { done(); s.oncanplaythrough = null; };
-            s.onerror = () => done();
-            s.src = files.snd[k];
-            loaded.snd[k] = s;
-        }
+    function loadSnd(file, loop = false, vol = 0.4) {
+        const s = new THREE.Audio(listener);
+        audioLoader.load(file, b => { s.setBuffer(b); s.setLoop(loop); s.setVolume(vol); });
+        return s;
     }
 
-    function done() {
-        count++;
-        document.getElementById('bar').style.width = (count/total)*100 + '%';
-        if(count >= total) {
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('menu').classList.remove('hidden');
-        }
-    }
+    const sfxJump = loadSnd('jump.wav');
+    const sfxLoose = loadSnd('loose.wav');
+    const sfxFall = loadSnd('fall.wav');
+    const m1 = loadSnd('music.mp3', true, 0.3);
+    const m2 = loadSnd('music2.mp3', true, 0.3);
 
-    init();
+    const loader = new THREE.TextureLoader();
+    const texP = loader.load('player.jpg');
+    const texN = loader.load('npc.png');
 
-    let playing = false, lvl = 0, att = 1, frame = 0;
-    let camX = 0, camY = 0, zoom = 1, lastT = 0;
-    const player = { x: 100, y: 400, w: 42, h: 42, vx: 0, vy: 0, speed: 8.5, jump: -23.5, ground: false, angle: 0, coyote: 0, fallSnd: false };
-    const keys = { left: false, right: false, up: false };
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(10, 20, 10);
+    scene.add(light);
 
-    function playSfx(n) {
-        if (!loaded.snd[n]) return;
-        try {
-            let s = loaded.snd[n].cloneNode();
-            s.volume = 0.5;
-            s.play().catch(() => {});
-        } catch(e) {}
-    }
+    let player = { x: 0, y: 5, z: 0, vx: 0, vy: 0, ground: false, lvl: 0, att: 1, mesh: null, fallSnd: false };
+    player.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: texP }));
+    scene.add(player.mesh);
 
-    function startMusic() {
-        try {
-            loaded.snd.m1.pause();
-            loaded.snd.m2.pause();
-            let track = (lvl % 2 === 0) ? loaded.snd.m1 : loaded.snd.m2;
-            if (track && track.src) {
-                track.loop = true;
-                track.volume = 0.4;
-                track.currentTime = 0;
-                track.play().catch(() => {});
+    let platforms = [], obstacles = [], npcs = [];
+    let input = { left: false, right: false, up: false };
+
+    function createLevel() {
+        [...platforms, ...obstacles, ...npcs].forEach(o => scene.remove(o.mesh || o));
+        platforms = []; obstacles = []; npcs = [];
+        document.getElementById('bg-container').style.backgroundImage = `url('back (${Math.floor(Math.random()*32)+1}).jpg')`;
+        
+        addPlatform(0, 0, 0, 6);
+        let cx = 0, cy = 0;
+        for(let i = 0; i < 12; i++) {
+            cx += 5 + Math.random() * 2;
+            cy += (Math.random() - 0.5) * 4;
+            let moving = Math.random() > 0.7;
+            let p = addPlatform(cx, cy, 0, 4, false, moving);
+            if(!moving) {
+                if(Math.random() > 0.4) addObstacle(cx, cy + 0.7, 0);
+                if(Math.random() > 0.5) addNPC(cx, cy + 0.8, 0, p);
             }
-        } catch(e) {}
-    }
-
-    function startGame() {
-        // Установка фона
-        bgReady = false;
-        bg.onload = () => bgReady = true;
-        bg.onerror = () => bgReady = false;
-        bg.src = `back (${(lvl % 32) + 1}).jpg`;
-
-        levelData = genLvl(lvl);
-        player.x = 100; player.y = 400; player.vx = 0; player.vy = 0; player.fallSnd = false;
-        
-        // Сброс камеры, чтобы не было черного экрана
-        camX = 0; camY = 0; 
-        
-        document.getElementById('lvlTxt').innerText = `ЭТАЖ: ${lvl+1}/32`;
-        document.getElementById('attTxt').innerText = `ПОПЫТКА: ${att}`;
-        
-        startMusic();
-        document.getElementById('menu').classList.add('hidden');
-        if(!playing) { playing = true; requestAnimationFrame(loop); }
-    }
-
-    window.onkeydown = (e) => {
-        if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left = true;
-        if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = true;
-        if(e.code==='ArrowUp'||e.code==='Space') keys.up = true;
-    };
-    window.onkeyup = (e) => {
-        if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left = false;
-        if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = false;
-        if(e.code==='ArrowUp'||e.code==='Space') keys.up = false;
-    };
-
-    const touch = (id, k) => {
-        let e = document.getElementById(id);
-        if(!e) return;
-        e.ontouchstart = (ev) => { ev.preventDefault(); keys[k] = true; };
-        e.ontouchend = (ev) => { ev.preventDefault(); keys[k] = false; };
-    };
-    touch('lBtn','left'); touch('rBtn','right'); touch('jBtn','up');
-
-    let levelData = { p: [], g: [0,0], s: [], l: [], n: [] };
-    function genLvl(idx) {
-        let len = 4000 + (idx*500), p=[{x:0,y:600,w:600,h:400,m:false}], s=[], l=[], n=[], lx=600, ly=600;
-        while(lx < len - 1000) {
-            lx += 260 + Math.random()*120;
-            ly = Math.max(300, Math.min(1100, ly + (Math.random()-0.5)*300));
-            let w = 280+Math.random()*100, mv = Math.random()>0.7;
-            let plat = { x:lx, y:ly, w:w, h:50, m:mv, off:Math.random()*10, bY:ly };
-            p.push(plat);
-            if(!mv) {
-                if(Math.random()>0.4) s.push({x:lx+w/2-25, y:ly-25, w:50, h:25});
-                n.push({x:lx+20, y:ly-40, w:35, h:40, par:plat, relX:Math.random()*(w-40), dir:1});
-            } else if(Math.random()>0.6) l.push({x:lx+w/2-10,y:ly-250,w:20,h:250});
-            lx += w;
         }
-        p.push({x:len-800, y:ly, w:800, h:600, m:false});
-        return { p, s, l, n, g:[len-200, ly] };
+        addPlatform(cx + 6, cy, 0, 5, true);
+        
+        // Логика переключения треков
+        if (currentMusic) currentMusic.stop();
+        currentMusic = (player.lvl % 2 === 0) ? m1 : m2;
+        if (!isMuted && currentMusic.buffer) currentMusic.play();
     }
 
-    function loop(t) {
-        if(!playing) return;
-        requestAnimationFrame(loop);
-        if(t - lastT < 16) return;
-        lastT = t; frame++;
-        let lon = (frame % 140) < 80;
+    function addPlatform(x, y, z, size, finish = false, moving = false) {
+        const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(size, 0.6, 3),
+            new THREE.MeshStandardMaterial({ color: finish ? 0xa6e3a1 : (moving ? 0x89b4fa : 0x313244) })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        const p = { mesh, x, y, z, size, finish, moving, offset: Math.random() * 10 };
+        platforms.push(p);
+        return p;
+    }
 
-        if(player.ground) { player.coyote=8; player.fallSnd=false; } else if(player.coyote>0) player.coyote--;
-        if(keys.up && player.coyote>0) { player.vy=player.jump; player.ground=false; player.coyote=0; playSfx('j'); }
-        if(!player.ground && player.y>1800 && !player.fallSnd) { playSfx('f'); player.fallSnd=true; }
+    function addObstacle(x, y, z) {
+        const mesh = new THREE.Mesh(
+            new THREE.ConeGeometry(0.4, 0.8, 4),
+            new THREE.MeshStandardMaterial({ color: 0xf38ba8 })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        obstacles.push(mesh);
+    }
 
-        player.vx = keys.left ? -player.speed : (keys.right ? player.speed : 0);
-        player.vy += 1.1; player.x += player.vx; player.y += player.vy;
-        player.angle = player.ground ? 0 : player.angle + 0.22;
+    function addNPC(x, y, z, parent) {
+        const mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.9, 0.9),
+            new THREE.MeshStandardMaterial({ map: texN, transparent: true, side: THREE.DoubleSide })
+        );
+        mesh.rotation.y = Math.PI / 4;
+        scene.add(mesh);
+        npcs.push({ mesh, parent, relX: 0, dir: 1 });
+    }
 
-        player.ground = false;
-        levelData.p.forEach(p => {
-            if(p.m) p.y = p.bY + Math.sin(frame*0.05 + p.off)*90;
-            if(player.x+player.w > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+40 && player.vy>=0) {
-                player.y = p.y-player.h; player.vy=0; player.ground=true;
+    // Управление
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.right = true;
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') input.up = true;
+    });
+    window.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.right = false;
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') input.up = false;
+    });
+
+    // Логика кнопки Mute
+    document.getElementById('muteBtn').onclick = () => {
+        isMuted = !isMuted;
+        document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+        if (currentMusic) {
+            if (isMuted) currentMusic.stop();
+            else currentMusic.play();
+        }
+    };
+
+    function update() {
+        player.vx = input.left ? -0.16 : (input.right ? 0.16 : player.vx * 0.85);
+        if(input.up && player.ground) { 
+            player.vy = 0.38; player.ground = false; 
+            if(sfxJump.buffer) sfxJump.play(); // Звуки работают всегда
+        }
+        
+        player.vy -= 0.018;
+        player.x += player.vx;
+        player.y += player.vy;
+
+        if(player.y < -5 && !player.fallSnd) {
+            if(sfxFall.buffer) sfxFall.play();
+            player.fallSnd = true;
+        }
+
+        platforms.forEach(p => {
+            if(p.moving) p.mesh.position.y = p.y + Math.sin(Date.now() * 0.003 + p.offset) * 1.5;
+            let py = p.moving ? p.mesh.position.y : p.y;
+            if(Math.abs(player.x - p.x) < p.size/2 + 0.4 && player.y - 0.5 < py + 0.3 && player.vy <= 0 && player.y > py) {
+                player.y = py + 0.8; player.vy = 0; player.ground = true;
+                player.fallSnd = false;
+                if(p.finish) { player.lvl++; createLevel(); resetPlayer(); }
             }
         });
 
-        levelData.n.forEach(n => {
-            n.relX += n.dir*2.5; if(n.relX<0 || n.relX>n.par.w-n.w) n.dir*=-1;
-            n.x = n.par.x+n.relX; n.y = n.par.y-n.h;
+        npcs.forEach(n => {
+            n.relX += 0.04 * n.dir;
+            if(Math.abs(n.relX) > n.parent.size/2 - 0.5) n.dir *= -1;
+            n.mesh.position.set(n.parent.x + n.relX, (n.parent.moving ? n.parent.mesh.position.y : n.parent.y) + 0.8, 0);
         });
 
-        let die = player.y > 3000;
-        levelData.s.forEach(s => { if(player.x+player.w-10>s.x && player.x+10<s.x+s.w && player.y+player.h>s.y) die=true; });
-        if(lon) levelData.l.forEach(l => { if(player.x+player.w>l.x && player.x<l.x+l.w && player.y+player.h>l.y && player.y < l.y+l.h) die=true; });
+        obstacles.forEach(s => { if(player.mesh.position.distanceTo(s.position) < 0.8) die(); });
 
-        if(die) { att++; playSfx('l'); startGame(); return; }
-        if(player.x > levelData.g[0]) { lvl++; startGame(); }
+        if(player.y < -12) die();
 
-        camX += (player.x - (canvas.width/zoom)*0.3 - camX)*0.1;
-        camY += (player.y - (canvas.height/zoom)*0.6 - camY)*0.08;
-        draw(lon);
+        player.mesh.position.set(player.x, player.y, player.z);
+        player.mesh.rotation.z -= player.vx * 0.5;
+        camera.position.x = player.x + 12;
+        camera.lookAt(player.x, player.y, 0);
     }
 
-    function draw(lon) {
-        let w = canvas.width, h = canvas.height;
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.fillStyle = '#0b0b10'; ctx.fillRect(0,0,w,h);
-        
-        ctx.save();
-        ctx.translate(w/2, h/2); ctx.scale(zoom, zoom); ctx.translate(-w/2, -h/2);
-        
-        // Рисуем фон только если он загрузился
-        if(bgReady) {
-            ctx.globalAlpha = 0.65;
-            let bx = -(camX*0.2)%w, by = -(camY*0.2)%h;
-            ctx.drawImage(bg, bx, by, w, h);
-            ctx.drawImage(bg, bx+w, by, w, h);
-            ctx.globalAlpha = 1;
-        }
-
-        ctx.translate(-camX, -camY);
-        
-        levelData.p.forEach(p => {
-            ctx.fillStyle = p.m ? '#24283b' : '#1e1e2e'; 
-            ctx.fillRect(p.x, p.y, p.w, p.h);
-            ctx.strokeStyle = '#cba6f7'; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
-        });
-        
-        ctx.fillStyle = '#f38ba8';
-        levelData.s.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x, s.y+s.h); ctx.lineTo(s.x+s.w/2, s.y); ctx.lineTo(s.x+s.w, s.y+s.h); ctx.fill(); });
-        
-        levelData.l.forEach(l => {
-            ctx.fillStyle = lon ? 'rgba(243,139,168,0.7)' : 'rgba(243,139,168,0.1)';
-            ctx.fillRect(l.x, l.y, l.w, l.h);
-        });
-
-        levelData.n.forEach(n => {
-            if(loaded.img.n.complete) {
-                ctx.save(); ctx.translate(n.x+n.w/2, n.y+n.h/2); if(n.dir<0) ctx.scale(-1,1);
-                ctx.drawImage(loaded.img.n, -n.w/2, -n.h/2, n.w, n.h); ctx.restore();
-            }
-        });
-
-        ctx.fillStyle = '#a6e3a1'; ctx.fillRect(levelData.g[0], levelData.g[1]-120, 60, 120);
-        
-        if(loaded.img.p.complete) {
-            ctx.save(); ctx.translate(player.x+player.w/2, player.y+player.h/2); ctx.rotate(player.angle);
-            ctx.drawImage(loaded.img.p, -player.w/2, -player.h/2, player.w, player.h);
-            ctx.restore();
-        }
-        
-        ctx.restore();
+    function die() { 
+        if(sfxLoose.buffer) sfxLoose.play();
+        player.att++; 
+        resetPlayer(); 
+        createLevel(); 
     }
 
-    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.onresize();
+    function resetPlayer() { 
+        player.x = 0; player.y = 5; player.vx = 0; player.vy = 0; player.fallSnd = false;
+        document.getElementById('attTxt').innerText = `ПОПЫТКА: ${player.att}`;
+        document.getElementById('lvlTxt').innerText = `ЭТАЖ: ${player.lvl + 1}`;
+    }
 
-    document.getElementById('startBtn').onclick = () => {
-        try {
-            const actx = new (window.AudioContext || window.webkitAudioContext)();
-            for (let k in loaded.snd) {
-                let s = loaded.snd[k];
-                if(s) s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(() => {});
-            }
-        } catch(e) {}
-        startGame();
+    document.getElementById('playBtn').onclick = () => {
+        document.getElementById('start-overlay').style.display = 'none';
+        THREE.AudioContext.getContext().resume();
+        createLevel();
+        animate();
+    };
+
+    const btn = (id, k) => {
+        const e = document.getElementById(id);
+        e.onmousedown = e.ontouchstart = (ev) => { ev.preventDefault(); input[k] = true; };
+        e.onmouseup = e.onmouseleave = e.ontouchend = () => input[k] = false;
+    };
+    btn('lBtn', 'left'); btn('rBtn', 'right'); btn('jBtn', 'up');
+
+    function animate() { requestAnimationFrame(animate); update(); renderer.render(scene, camera); }
+
+    window.onresize = () => {
+        const aspect = window.innerWidth / window.innerHeight;
+        camera.left = -d * aspect; camera.right = d * aspect;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
     };
 </script>
 </body>
