@@ -3,40 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>STADY DASH: CRYSTAL CLEAR</title>
+    <title>STADY DASH: FIX BLACK SCREEN</title>
     <style>
-        :root { --main: #cba6f7; --bg: #0b0b10; --danger: #f38ba8; --accent: #a6e3a1; }
+        :root { --main: #cba6f7; --bg: #0b0b10; --danger: #f38ba8; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: sans-serif; color: white; user-select: none; touch-action: none; }
         canvas { display: block; width: 100%; height: 100%; }
         
-        /* Загрузчик */
         #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
         .bar-container { width: 220px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 20px; }
-        #bar { width: 0%; height: 100%; background: var(--main); border-radius: 10px; transition: width 0.3s; box-shadow: 0 0 15px var(--main); }
+        #bar { width: 0%; height: 100%; background: var(--main); border-radius: 10px; transition: width 0.3s; }
 
-        /* Меню */
-        .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1000; background: rgba(11, 11, 16, 0.85); backdrop-filter: blur(8px); }
-        .panel { background: rgba(24, 24, 37, 0.9); padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .start-btn { background: var(--main); color: #11111b; border: none; padding: 18px 50px; font-size: 1.4rem; font-weight: 900; border-radius: 15px; cursor: pointer; transition: transform 0.2s; }
-        .start-btn:active { transform: scale(0.95); }
-
-        /* Статистика */
-        .stats-box { position: fixed; top: 20px; left: 20px; z-index: 100; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); padding: 12px 20px; border-radius: 15px; border: 1px solid rgba(203, 166, 247, 0.3); pointer-events: none; }
+        .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1000; background: rgba(11, 11, 16, 0.9); backdrop-filter: blur(10px); }
+        .panel { background: #181825; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; }
+        .start-btn { background: var(--main); color: #11111b; border: none; padding: 18px 50px; font-size: 1.5rem; font-weight: 900; border-radius: 15px; cursor: pointer; }
         
-        /* Кнопки */
+        .stats { position: fixed; top: 20px; left: 20px; z-index: 100; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 15px; border: 1px solid var(--main); pointer-events: none; }
         .controls { position: fixed; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; z-index: 500; pointer-events: none; }
-        .btn-zone { pointer-events: auto; }
-        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.15); backdrop-filter: blur(3px); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.2rem; border: 2px solid rgba(255,255,255,0.2); }
-        .btn:active { background: rgba(255,255,255,0.3); }
-        .btn-jump { border-radius: 50%; border-color: var(--main); width: 90px; height: 90px; background: rgba(203, 166, 247, 0.2); }
-        
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid rgba(255,255,255,0.2); pointer-events: auto; }
+        .btn-jump { border-radius: 50%; border-color: var(--main); width: 95px; height: 95px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div style="font-size: 1.8rem; font-weight: 900; color: var(--main); letter-spacing: 2px;">STADY DASH</div>
+        <div style="font-size: 1.5rem; color: var(--main); font-weight: bold;">STADY DASH</div>
         <div class="bar-container"><div id="bar"></div></div>
     </div>
 
@@ -44,174 +35,190 @@
 
     <div id="menu" class="overlay hidden">
         <div class="panel">
-            <h1 style="margin: 0 0 20px 0; color: var(--main);">STADY DASH</h1>
-            <button class="start-btn" id="mainStartBtn">ПОГНАЛИ!</button>
+            <h1 style="margin-bottom: 25px;">STADY DASH</h1>
+            <button class="start-btn" id="startBtn">ПОГНАЛИ!</button>
         </div>
     </div>
 
-    <div class="stats-box">
-        <div id="lvlDisplay" style="font-weight: bold; font-size: 1.1rem;">ЭТАЖ: 1/32</div>
-        <div id="attemptDisplay" style="color: var(--danger); font-size: 0.9rem; margin-top: 4px;">ПОПЫТКА: 1</div>
+    <div class="stats">
+        <div id="lvlTxt">ЭТАЖ: 1/32</div>
+        <div id="attTxt" style="color: var(--danger); font-size: 0.8rem;">ПОПЫТКА: 1</div>
     </div>
 
     <div class="controls">
-        <div style="display:flex; gap:20px;">
-            <div id="lBtn" class="btn-zone"><div class="btn">←</div></div>
-            <div id="rBtn" class="btn-zone"><div class="btn">→</div></div>
+        <div style="display:flex; gap:15px;">
+            <div id="lBtn" class="btn">←</div>
+            <div id="rBtn" class="btn">→</div>
         </div>
-        <div id="jBtn" class="btn-zone"><div class="btn btn-jump">↑</div></div>
+        <div id="jBtn" class="btn btn-jump">↑</div>
     </div>
 
 <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     
-    const assets = {
-        images: { player: 'player.jpg', npc: 'npc.png' },
-        audio: { m1: 'music.mp3', m2: 'music2.mp3', jump: 'jump.wav', loose: 'loose.wav', fall: 'fall.wav' }
+    const files = {
+        img: { p: 'player.jpg', n: 'npc.png' },
+        snd: { m1: 'music.mp3', m2: 'music2.mp3', j: 'jump.wav', l: 'loose.wav', f: 'fall.wav' }
     };
 
     const loaded = { img: {}, snd: {} };
-    const bgImg = new Image();
-    let total = Object.keys(assets.images).length + Object.keys(assets.audio).length;
+    const bg = new Image();
+    let bgReady = false;
+    let total = Object.keys(files.img).length + Object.keys(files.snd).length;
     let count = 0;
 
-    function initPreload() {
-        for (let k in assets.images) {
-            let img = new Image();
-            img.src = assets.images[k];
-            img.onload = itemDone; img.onerror = itemDone;
-            loaded.img[k] = img;
+    function init() {
+        for (let k in files.img) {
+            let i = new Image();
+            i.onload = i.onerror = () => done();
+            i.src = files.img[k];
+            loaded.img[k] = i;
         }
-        for (let k in assets.audio) {
-            let snd = new Audio();
-            snd.src = assets.audio[k];
-            snd.oncanplaythrough = function cb() { itemDone(); snd.oncanplaythrough = null; };
-            snd.onerror = itemDone;
-            loaded.snd[k] = snd;
+        for (let k in files.snd) {
+            let s = new Audio();
+            s.oncanplaythrough = () => { done(); s.oncanplaythrough = null; };
+            s.onerror = () => done();
+            s.src = files.snd[k];
+            loaded.snd[k] = s;
         }
     }
 
-    function itemDone() {
+    function done() {
         count++;
         document.getElementById('bar').style.width = (count/total)*100 + '%';
         if(count >= total) {
-            setTimeout(() => {
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('menu').classList.remove('hidden');
-            }, 300);
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('menu').classList.remove('hidden');
         }
     }
 
-    initPreload();
+    init();
 
-    let isPlaying = false, currentLvl = 0, attempts = 1, frame = 0;
-    let cameraX = 0, cameraY = 0, zoom = 1.0, lastTime = 0;
+    let playing = false, lvl = 0, att = 1, frame = 0;
+    let camX = 0, camY = 0, zoom = 1, lastT = 0;
     const player = { x: 100, y: 400, w: 42, h: 42, vx: 0, vy: 0, speed: 8.5, jump: -23.5, ground: false, angle: 0, coyote: 0, fallSnd: false };
-    const input = { left: false, right: false, up: false };
+    const keys = { left: false, right: false, up: false };
 
-    function playSfx(name) {
-        if(!loaded.snd[name]) return;
-        let s = loaded.snd[name].cloneNode();
-        s.volume = 0.4; s.play().catch(()=>{});
+    function playSfx(n) {
+        if (!loaded.snd[n]) return;
+        try {
+            let s = loaded.snd[n].cloneNode();
+            s.volume = 0.5;
+            s.play().catch(() => {});
+        } catch(e) {}
     }
 
-    function updateMusic() {
-        [loaded.snd.m1, loaded.snd.m2].forEach(m => { if(m){m.pause(); m.currentTime = 0;} });
-        let track = (currentLvl % 2 === 0) ? loaded.snd.m1 : loaded.snd.m2;
-        if(track) { track.loop = true; track.play().catch(()=>{ loaded.snd.m2.play().catch(()=>{}); }); }
+    function startMusic() {
+        try {
+            loaded.snd.m1.pause();
+            loaded.snd.m2.pause();
+            let track = (lvl % 2 === 0) ? loaded.snd.m1 : loaded.snd.m2;
+            if (track && track.src) {
+                track.loop = true;
+                track.volume = 0.4;
+                track.currentTime = 0;
+                track.play().catch(() => {});
+            }
+        } catch(e) {}
     }
 
     function startGame() {
-        bgImg.src = `back (${(currentLvl % 32) + 1}).jpg`;
-        levelData = generateLevel(currentLvl);
-        player.x = 100; player.y = 400; player.vx = 0; player.vy = 0; player.angle = 0; player.fallSnd = false;
-        document.getElementById('lvlDisplay').innerText = `ЭТАЖ: ${currentLvl+1}/32`;
-        document.getElementById('attemptDisplay').innerText = `ПОПЫТКА: ${attempts}`;
-        updateMusic();
+        // Установка фона
+        bgReady = false;
+        bg.onload = () => bgReady = true;
+        bg.onerror = () => bgReady = false;
+        bg.src = `back (${(lvl % 32) + 1}).jpg`;
+
+        levelData = genLvl(lvl);
+        player.x = 100; player.y = 400; player.vx = 0; player.vy = 0; player.fallSnd = false;
+        
+        // Сброс камеры, чтобы не было черного экрана
+        camX = 0; camY = 0; 
+        
+        document.getElementById('lvlTxt').innerText = `ЭТАЖ: ${lvl+1}/32`;
+        document.getElementById('attTxt').innerText = `ПОПЫТКА: ${att}`;
+        
+        startMusic();
         document.getElementById('menu').classList.add('hidden');
-        if(!isPlaying) { isPlaying = true; requestAnimationFrame(loop); }
+        if(!playing) { playing = true; requestAnimationFrame(loop); }
     }
 
-    window.onkeydown = (e) => { 
-        if(e.code==='ArrowLeft'||e.code==='KeyA') input.left = true;
-        if(e.code==='ArrowRight'||e.code==='KeyD') input.right = true;
-        if(e.code==='ArrowUp'||e.code==='Space'||e.code==='KeyW') input.up = true;
+    window.onkeydown = (e) => {
+        if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left = true;
+        if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = true;
+        if(e.code==='ArrowUp'||e.code==='Space') keys.up = true;
     };
-    window.onkeyup = (e) => { 
-        if(e.code==='ArrowLeft'||e.code==='KeyA') input.left = false;
-        if(e.code==='ArrowRight'||e.code==='KeyD') input.right = false;
-        if(e.code==='ArrowUp'||e.code==='Space'||e.code==='KeyW') input.up = false;
+    window.onkeyup = (e) => {
+        if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left = false;
+        if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = false;
+        if(e.code==='ArrowUp'||e.code==='Space') keys.up = false;
     };
 
-    const bT = (id, k) => {
+    const touch = (id, k) => {
         let e = document.getElementById(id);
-        e.ontouchstart = (ev) => { ev.preventDefault(); input[k] = true; };
-        e.ontouchend = (ev) => { ev.preventDefault(); input[k] = false; };
+        if(!e) return;
+        e.ontouchstart = (ev) => { ev.preventDefault(); keys[k] = true; };
+        e.ontouchend = (ev) => { ev.preventDefault(); keys[k] = false; };
     };
-    bT('lBtn','left'); bT('rBtn','right'); bT('jBtn','up');
+    touch('lBtn','left'); touch('rBtn','right'); touch('jBtn','up');
 
-    let levelData = { p: [], g: [0,0], s: [], l: [], npcs: [] };
-    function generateLevel(idx) {
-        let len = 5000 + (idx * 400), p = [{x:0, y:600, w:600, h:400, m:false}], s=[], l=[], npcs=[], lx=600, ly=600;
-        while(lx < len - 900) {
-            lx += 240 + Math.random()*100;
-            ly = Math.max(300, Math.min(1000, ly + (Math.random()-0.5)*250));
-            let w = 280 + Math.random()*80, mv = Math.random()>0.7;
+    let levelData = { p: [], g: [0,0], s: [], l: [], n: [] };
+    function genLvl(idx) {
+        let len = 4000 + (idx*500), p=[{x:0,y:600,w:600,h:400,m:false}], s=[], l=[], n=[], lx=600, ly=600;
+        while(lx < len - 1000) {
+            lx += 260 + Math.random()*120;
+            ly = Math.max(300, Math.min(1100, ly + (Math.random()-0.5)*300));
+            let w = 280+Math.random()*100, mv = Math.random()>0.7;
             let plat = { x:lx, y:ly, w:w, h:50, m:mv, off:Math.random()*10, bY:ly };
             p.push(plat);
             if(!mv) {
-                if(Math.random()>0.5) s.push({x:lx+w/2-25, y:ly-25, w:50, h:25});
-                npcs.push({x:lx+20, y:ly-40, w:35, h:40, par:plat, relX:Math.random()*(w-40), dir:1});
-            } else if(Math.random()>0.6) {
-                l.push({x:lx+w/2-10, y:ly-220, w:20, h:220});
-            }
+                if(Math.random()>0.4) s.push({x:lx+w/2-25, y:ly-25, w:50, h:25});
+                n.push({x:lx+20, y:ly-40, w:35, h:40, par:plat, relX:Math.random()*(w-40), dir:1});
+            } else if(Math.random()>0.6) l.push({x:lx+w/2-10,y:ly-250,w:20,h:250});
             lx += w;
         }
-        p.push({x:len-700, y:ly, w:700, h:500, m:false});
-        return { p, s, l, npcs, g:[len-150, ly] };
+        p.push({x:len-800, y:ly, w:800, h:600, m:false});
+        return { p, s, l, n, g:[len-200, ly] };
     }
 
     function loop(t) {
-        if(!isPlaying) return;
+        if(!playing) return;
         requestAnimationFrame(loop);
-        if(t - lastTime < 16) return;
-        lastTime = t; frame++;
+        if(t - lastT < 16) return;
+        lastT = t; frame++;
         let lon = (frame % 140) < 80;
 
         if(player.ground) { player.coyote=8; player.fallSnd=false; } else if(player.coyote>0) player.coyote--;
-        if(!player.ground && player.y>1500 && !player.fallSnd) { playSfx('fall'); player.fallSnd=true; }
-        if(input.up && player.coyote>0) { player.vy=player.jump; player.ground=false; player.coyote=0; playSfx('jump'); }
+        if(keys.up && player.coyote>0) { player.vy=player.jump; player.ground=false; player.coyote=0; playSfx('j'); }
+        if(!player.ground && player.y>1800 && !player.fallSnd) { playSfx('f'); player.fallSnd=true; }
 
-        player.vx = input.left ? -player.speed : (input.right ? player.speed : 0);
+        player.vx = keys.left ? -player.speed : (keys.right ? player.speed : 0);
         player.vy += 1.1; player.x += player.vx; player.y += player.vy;
         player.angle = player.ground ? 0 : player.angle + 0.22;
 
         player.ground = false;
         levelData.p.forEach(p => {
-            if(p.m) p.y = p.bY + Math.sin(frame*0.05 + p.off)*80;
+            if(p.m) p.y = p.bY + Math.sin(frame*0.05 + p.off)*90;
             if(player.x+player.w > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+40 && player.vy>=0) {
                 player.y = p.y-player.h; player.vy=0; player.ground=true;
             }
         });
 
-        levelData.npcs.forEach(n => {
-            n.relX += n.dir*2.2; if(n.relX<0 || n.relX>n.par.w-n.w) n.dir*=-1;
+        levelData.n.forEach(n => {
+            n.relX += n.dir*2.5; if(n.relX<0 || n.relX>n.par.w-n.w) n.dir*=-1;
             n.x = n.par.x+n.relX; n.y = n.par.y-n.h;
         });
 
-        levelData.s.forEach(s => { if(player.x+player.w-10>s.x && player.x+10<s.x+s.w && player.y+player.h>s.y) { attempts++; startGame(); playSfx('loose'); } });
-        if(lon) levelData.l.forEach(l => { if(player.x+player.w>l.x && player.x<l.x+l.w && player.y+player.h>l.y && player.y<l.y+l.h) { attempts++; startGame(); playSfx('loose'); } });
-        
-        if(player.y>2800) { attempts++; startGame(); }
-        if(player.x > levelData.g[0]) { currentLvl++; startGame(); }
+        let die = player.y > 3000;
+        levelData.s.forEach(s => { if(player.x+player.w-10>s.x && player.x+10<s.x+s.w && player.y+player.h>s.y) die=true; });
+        if(lon) levelData.l.forEach(l => { if(player.x+player.w>l.x && player.x<l.x+l.w && player.y+player.h>l.y && player.y < l.y+l.h) die=true; });
 
-        let tZ = 1.0, nP = levelData.p.find(p=>p.x > player.x && p.x < player.x+600);
-        if(nP) tZ = Math.max(0.7, 1.0 - Math.abs(player.y-nP.y)/1200);
-        zoom += (tZ - zoom)*0.05;
-        cameraX += (player.x - (canvas.width/zoom)*0.3 - cameraX)*0.1;
-        cameraY += (player.y - (canvas.height/zoom)*0.6 - cameraY)*0.08;
-        
+        if(die) { att++; playSfx('l'); startGame(); return; }
+        if(player.x > levelData.g[0]) { lvl++; startGame(); }
+
+        camX += (player.x - (canvas.width/zoom)*0.3 - camX)*0.1;
+        camY += (player.y - (canvas.height/zoom)*0.6 - camY)*0.08;
         draw(lon);
     }
 
@@ -223,56 +230,60 @@
         ctx.save();
         ctx.translate(w/2, h/2); ctx.scale(zoom, zoom); ctx.translate(-w/2, -h/2);
         
-        // ПРОЗРАЧНОСТЬ ФОНА ТЕПЕРЬ 0.7 (БЫЛО 0.3)
-        ctx.globalAlpha = 0.7; 
-        ctx.drawImage(bgImg, -(cameraX*0.15)%w, -(cameraY*0.15)%h, w, h);
-        ctx.drawImage(bgImg, -(cameraX*0.15)%w + w, -(cameraY*0.15)%h, w, h);
-        
-        ctx.translate(-cameraX, -cameraY);
-        ctx.globalAlpha = 1.0;
+        // Рисуем фон только если он загрузился
+        if(bgReady) {
+            ctx.globalAlpha = 0.65;
+            let bx = -(camX*0.2)%w, by = -(camY*0.2)%h;
+            ctx.drawImage(bg, bx, by, w, h);
+            ctx.drawImage(bg, bx+w, by, w, h);
+            ctx.globalAlpha = 1;
+        }
 
+        ctx.translate(-camX, -camY);
+        
         levelData.p.forEach(p => {
             ctx.fillStyle = p.m ? '#24283b' : '#1e1e2e'; 
             ctx.fillRect(p.x, p.y, p.w, p.h);
-            ctx.strokeStyle = 'rgba(203, 166, 247, 0.6)'; 
-            ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = '#cba6f7'; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
         });
         
         ctx.fillStyle = '#f38ba8';
-        levelData.s.forEach(s => { 
-            ctx.beginPath(); ctx.moveTo(s.x, s.y+s.h); ctx.lineTo(s.x+s.w/2, s.y); ctx.lineTo(s.x+s.w, s.y+s.h); ctx.fill(); 
+        levelData.s.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x, s.y+s.h); ctx.lineTo(s.x+s.w/2, s.y); ctx.lineTo(s.x+s.w, s.y+s.h); ctx.fill(); });
+        
+        levelData.l.forEach(l => {
+            ctx.fillStyle = lon ? 'rgba(243,139,168,0.7)' : 'rgba(243,139,168,0.1)';
+            ctx.fillRect(l.x, l.y, l.w, l.h);
         });
 
-        // ПРОЗРАЧНОСТЬ ЛАЗЕРОВ
-        levelData.l.forEach(l => {
-            ctx.fillStyle = lon ? 'rgba(243, 139, 168, 0.8)' : 'rgba(243, 139, 168, 0.15)';
-            ctx.fillRect(l.x, l.y, l.w, l.h);
-            if(lon) {
-                ctx.shadowBlur = 20; ctx.shadowColor = '#f38ba8';
-                ctx.fillStyle = '#fff'; ctx.fillRect(l.x+l.w/2-1, l.y, 2, l.h);
-                ctx.shadowBlur = 0;
+        levelData.n.forEach(n => {
+            if(loaded.img.n.complete) {
+                ctx.save(); ctx.translate(n.x+n.w/2, n.y+n.h/2); if(n.dir<0) ctx.scale(-1,1);
+                ctx.drawImage(loaded.img.n, -n.w/2, -n.h/2, n.w, n.h); ctx.restore();
             }
         });
 
-        levelData.npcs.forEach(n => {
-            ctx.save(); ctx.translate(n.x+n.w/2, n.y+n.h/2); if(n.dir<0) ctx.scale(-1,1);
-            ctx.drawImage(loaded.img.npc, -n.w/2, -n.h/2, n.w, n.h); ctx.restore();
-        });
-
-        ctx.fillStyle = '#a6e3a1'; ctx.shadowBlur = 10; ctx.shadowColor = '#a6e3a1';
-        ctx.fillRect(levelData.g[0], levelData.g[1]-120, 60, 120); ctx.shadowBlur = 0;
+        ctx.fillStyle = '#a6e3a1'; ctx.fillRect(levelData.g[0], levelData.g[1]-120, 60, 120);
         
-        ctx.save(); ctx.translate(player.x+player.w/2, player.y+player.h/2); ctx.rotate(player.angle);
-        ctx.drawImage(loaded.img.player, -player.w/2, -player.h/2, player.w, player.h);
-        ctx.restore(); ctx.restore();
+        if(loaded.img.p.complete) {
+            ctx.save(); ctx.translate(player.x+player.w/2, player.y+player.h/2); ctx.rotate(player.angle);
+            ctx.drawImage(loaded.img.p, -player.w/2, -player.h/2, player.w, player.h);
+            ctx.restore();
+        }
+        
+        ctx.restore();
     }
 
     window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     window.onresize();
-    
-    document.getElementById('mainStartBtn').onclick = () => {
-        // Разблокировка звука для iOS/Android
-        for(let k in loaded.snd) { let s = loaded.snd[k]; s.play().then(()=>s.pause()).catch(()=>{}); }
+
+    document.getElementById('startBtn').onclick = () => {
+        try {
+            const actx = new (window.AudioContext || window.webkitAudioContext)();
+            for (let k in loaded.snd) {
+                let s = loaded.snd[k];
+                if(s) s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(() => {});
+            }
+        } catch(e) {}
         startGame();
     };
 </script>
